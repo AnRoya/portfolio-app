@@ -62,7 +62,7 @@ const PortfolioDashboard = () => {
         const columns = line.split(',');
         
         // Column mapping (0-indexed, so subtract 1 from your A-Z numbering)
-        // A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, S=18, T=19, V=21, W=22, X=23
+        // A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, S=18, T=19, V=21, W=22, X=23
         const symbol = columns[0]?.trim(); // A
         const buyDate = columns[1]?.trim(); // B
         const quantity = parseFloat(columns[2]) || 0; // C
@@ -75,6 +75,7 @@ const PortfolioDashboard = () => {
         const sellPrice = parseFloat(columns[9]) || 0; // J
         const riskStock = parseFloat(columns[10]) || 0; // K
         const riskAccount = parseFloat(columns[11]) || 0; // L
+        const weight = parseFloat(columns[12]) || 0; // M
         
         // Portfolio info from columns S, T, V, W, X (indices 18, 19, 21, 22, 23)
         if (columns[18]) startingSize = parseFloat(columns[18]) || startingSize;
@@ -94,6 +95,7 @@ const PortfolioDashboard = () => {
             buyPrice,
             currPrice,
             marketValue,
+            weight, // From column M
             gainLossDollar,
             gainLossPercent,
             stopLoss,
@@ -127,6 +129,7 @@ const PortfolioDashboard = () => {
           buyPrice: 180,
           currPrice: 195.5,
           marketValue: 9775,
+          weight: 11.7,
           gainLossDollar: 775,
           gainLossPercent: 8.61,
           stopLoss: 170,
@@ -272,15 +275,14 @@ const PortfolioDashboard = () => {
             )}
           </div>
           <div className="mt-4 space-y-2">
-            {chartData.slice(0, 5).map((item, i) => {
-              const weight = (item.value / portfolioInfo.currentSize) * 100;
+            {data.slice(0, 5).map((item, i) => {
               return (
-                <div key={item.name} className="flex justify-between text-sm">
+                <div key={item.symbol} className="flex justify-between text-sm">
                   <span className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }}></span>
-                    {item.name}
+                    {item.symbol}
                   </span>
-                  <span className="text-slate-400">{weight.toFixed(1)}%</span>
+                  <span className="text-slate-400">{item.weight.toFixed(1)}%</span>
                 </div>
               );
             })}
@@ -316,14 +318,13 @@ const PortfolioDashboard = () => {
                   </tr>
                 ) : (
                   data.sort((a, b) => b.marketValue - a.marketValue).map((stock) => {
-                    const weight = (stock.marketValue / portfolioInfo.currentSize) * 100;
                     return (
                       <tr key={stock.symbol} className="hover:bg-slate-700/30 transition-colors">
                         <td className="px-6 py-4 font-bold text-blue-400">{stock.symbol}</td>
                         <td className="px-6 py-4 text-right">{stock.quantity}</td>
                         <td className="px-6 py-4 text-right text-slate-300">${stock.currPrice.toFixed(2)}</td>
                         <td className="px-6 py-4 text-right font-medium">${stock.marketValue.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                        <td className="px-6 py-4 text-right text-slate-400">{weight.toFixed(1)}%</td>
+                        <td className="px-6 py-4 text-right text-slate-400">{stock.weight.toFixed(1)}%</td>
                         <td className={`px-6 py-4 text-right font-bold ${stock.gainLossDollar >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {stock.gainLossDollar >= 0 ? '+' : ''}${Math.abs(stock.gainLossDollar).toLocaleString(undefined, {minimumFractionDigits: 2})}
                         </td>
