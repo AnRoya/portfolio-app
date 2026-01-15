@@ -61,11 +61,12 @@ const PortfolioDashboard = () => {
         console.log('S2 (col 18):', row2[18]); // Debug
         console.log('T2 (col 19):', row2[19]); // Debug
         
-        startingSize = parseFloat(row2[18]) || 0; // S2
-        currentSize = parseFloat(row2[19]) || 0; // T2
+        // Remove commas from numbers before parsing
+        startingSize = parseFloat((row2[18] || '').replace(/,/g, '')) || 0; // S2
+        currentSize = parseFloat((row2[19] || '').replace(/,/g, '')) || 0; // T2
         currentMonth = row2[21]?.trim() || ''; // V2
-        monthlyPL = parseFloat(row2[22]) || 0; // W2
-        monthlyPLPercent = parseFloat(row2[23]) || 0; // X2
+        monthlyPL = parseFloat((row2[22] || '').replace(/,/g, '')) || 0; // W2
+        monthlyPLPercent = parseFloat((row2[23] || '').replace(/[,%]/g, '')) || 0; // X2 (remove % too)
         
         console.log('Parsed - Starting:', startingSize, 'Current:', currentSize); // Debug
       }
@@ -81,17 +82,17 @@ const PortfolioDashboard = () => {
         // A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12
         const symbol = columns[0]?.trim(); // A
         const buyDate = columns[1]?.trim(); // B
-        const quantity = parseFloat(columns[2]) || 0; // C
-        const buyPrice = parseFloat(columns[3]) || 0; // D
-        const stopLoss = parseFloat(columns[4]) || 0; // E
-        const currPrice = parseFloat(columns[5]) || 0; // F
-        const gainLossDollar = parseFloat(columns[6]) || 0; // G
-        const gainLossPercent = parseFloat(columns[7]) || 0; // H
+        const quantity = parseFloat((columns[2] || '').replace(/,/g, '')) || 0; // C
+        const buyPrice = parseFloat((columns[3] || '').replace(/,/g, '')) || 0; // D
+        const stopLoss = parseFloat((columns[4] || '').replace(/,/g, '')) || 0; // E
+        const currPrice = parseFloat((columns[5] || '').replace(/,/g, '')) || 0; // F
+        const gainLossDollar = parseFloat((columns[6] || '').replace(/,/g, '')) || 0; // G
+        const gainLossPercent = parseFloat((columns[7] || '').replace(/[,%]/g, '')) || 0; // H
         const sellDate = columns[8]?.trim(); // I
-        const sellPrice = parseFloat(columns[9]) || 0; // J
-        const riskStock = parseFloat(columns[10]) || 0; // K
-        const riskAccount = parseFloat(columns[11]) || 0; // L
-        const weight = parseFloat(columns[12]) || 0; // M
+        const sellPrice = parseFloat((columns[9] || '').replace(/,/g, '')) || 0; // J
+        const riskStock = parseFloat((columns[10] || '').replace(/[,%]/g, '')) || 0; // K
+        const riskAccount = parseFloat((columns[11] || '').replace(/[,%]/g, '')) || 0; // L
+        const weight = parseFloat((columns[12] || '').replace(/[,%]/g, '')) || 0; // M
         
         // Only include active positions (no sell date and has a symbol)
         if (symbol && !sellDate && quantity > 0) {
