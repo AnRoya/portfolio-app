@@ -54,6 +54,16 @@ const PortfolioDashboard = () => {
       let monthlyPLPercent = 0;
       let currentMonth = '';
       
+      // First, read the portfolio totals from row 2 (line index 1)
+      if (lines.length > 1) {
+        const row2 = lines[1].split(',');
+        startingSize = parseFloat(row2[18]) || 0; // S2
+        currentSize = parseFloat(row2[19]) || 0; // T2
+        currentMonth = row2[21]?.trim() || ''; // V2
+        monthlyPL = parseFloat(row2[22]) || 0; // W2
+        monthlyPLPercent = parseFloat(row2[23]) || 0; // X2
+      }
+      
       // Parse each row (skip header row 0, start from row 1)
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
@@ -61,8 +71,8 @@ const PortfolioDashboard = () => {
         
         const columns = line.split(',');
         
-        // Column mapping (0-indexed, so subtract 1 from your A-Z numbering)
-        // A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, S=18, T=19, V=21, W=22, X=23
+        // Column mapping (0-indexed)
+        // A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12
         const symbol = columns[0]?.trim(); // A
         const buyDate = columns[1]?.trim(); // B
         const quantity = parseFloat(columns[2]) || 0; // C
@@ -76,13 +86,6 @@ const PortfolioDashboard = () => {
         const riskStock = parseFloat(columns[10]) || 0; // K
         const riskAccount = parseFloat(columns[11]) || 0; // L
         const weight = parseFloat(columns[12]) || 0; // M
-        
-        // Portfolio info from columns S, T, V, W, X (indices 18, 19, 21, 22, 23)
-        if (columns[18]) startingSize = parseFloat(columns[18]) || startingSize;
-        if (columns[19]) currentSize = parseFloat(columns[19]) || currentSize;
-        if (columns[21]) currentMonth = columns[21].trim();
-        if (columns[22]) monthlyPL = parseFloat(columns[22]) || monthlyPL;
-        if (columns[23]) monthlyPLPercent = parseFloat(columns[23]) || monthlyPLPercent;
         
         // Only include active positions (no sell date and has a symbol)
         if (symbol && !sellDate && quantity > 0) {
@@ -275,17 +278,22 @@ const PortfolioDashboard = () => {
             )}
           </div>
           <div className="mt-4 space-y-2">
-            {data.slice(0, 5).map((item, i) => {
-              return (
-                <div key={item.symbol} className="flex justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }}></span>
-                    {item.symbol}
-                  </span>
-                  <span className="text-slate-400">{item.weight.toFixed(1)}%</span>
-                </div>
-              );
-            })}
+            {data
+              .sort((a, b) => b.marketValue - a.marketValue)
+              .slice(0, 5)
+              .map((item, i) => {
+                // Handle weight whether it's stored as decimal (0.117) or percentage (11.7)
+                const displayWeight = item.weight > 1 ? item.weight : item.weight * 100;
+                return (
+                  <div key={item.symbol} className="flex justify-between text-sm">
+                    <span className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }}></span>
+                      {item.symbol}
+                    </span>
+                    <span className="text-slate-400">{displayWeight.toFixed(1)}%</span>
+                  </div>
+                );
+              })}
           </div>
         </div>
 
@@ -318,13 +326,15 @@ const PortfolioDashboard = () => {
                   </tr>
                 ) : (
                   data.sort((a, b) => b.marketValue - a.marketValue).map((stock) => {
+                    // Handle weight whether it's stored as decimal (0.117) or percentage (11.7)
+                    const displayWeight = stock.weight > 1 ? stock.weight : stock.weight * 100;
                     return (
                       <tr key={stock.symbol} className="hover:bg-slate-700/30 transition-colors">
                         <td className="px-6 py-4 font-bold text-blue-400">{stock.symbol}</td>
                         <td className="px-6 py-4 text-right">{stock.quantity}</td>
                         <td className="px-6 py-4 text-right text-slate-300">${stock.currPrice.toFixed(2)}</td>
                         <td className="px-6 py-4 text-right font-medium">${stock.marketValue.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                        <td className="px-6 py-4 text-right text-slate-400">{stock.weight.toFixed(1)}%</td>
+                        <td className="px-6 py-4 text-right text-slate-400">{displayWeight.toFixed(1)}%</td>
                         <td className={`px-6 py-4 text-right font-bold ${stock.gainLossDollar >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {stock.gainLossDollar >= 0 ? '+' : ''}${Math.abs(stock.gainLossDollar).toLocaleString(undefined, {minimumFractionDigits: 2})}
                         </td>
