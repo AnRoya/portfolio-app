@@ -57,11 +57,17 @@ const PortfolioDashboard = () => {
       // First, read the portfolio totals from row 2 (line index 1)
       if (lines.length > 1) {
         const row2 = lines[1].split(',');
+        console.log('Row 2 columns:', row2); // Debug
+        console.log('S2 (col 18):', row2[18]); // Debug
+        console.log('T2 (col 19):', row2[19]); // Debug
+        
         startingSize = parseFloat(row2[18]) || 0; // S2
         currentSize = parseFloat(row2[19]) || 0; // T2
         currentMonth = row2[21]?.trim() || ''; // V2
         monthlyPL = parseFloat(row2[22]) || 0; // W2
         monthlyPLPercent = parseFloat(row2[23]) || 0; // X2
+        
+        console.log('Parsed - Starting:', startingSize, 'Current:', currentSize); // Debug
       }
       
       // Parse each row (skip header row 0, start from row 1)
@@ -157,16 +163,20 @@ const PortfolioDashboard = () => {
   const metrics = useMemo(() => {
     const totalMarketValue = data.reduce((acc, curr) => acc + curr.marketValue, 0);
     const totalGainLoss = data.reduce((acc, curr) => acc + curr.gainLossDollar, 0);
-    const totalInvested = portfolioInfo.currentSize - totalGainLoss;
-    const overallReturn = totalInvested > 0 ? (totalGainLoss / totalInvested) * 100 : 0;
+    
+    // Calculate total cost basis (what you paid for all stocks)
+    const totalCostBasis = data.reduce((acc, curr) => acc + (curr.quantity * curr.buyPrice), 0);
+    
+    // Overall return % = (total gain / total cost basis) * 100
+    const overallReturn = totalCostBasis > 0 ? (totalGainLoss / totalCostBasis) * 100 : 0;
 
     return { 
       totalMarketValue, 
       totalGainLoss, 
-      totalInvested,
+      totalCostBasis,
       overallReturn
     };
-  }, [data, portfolioInfo]);
+  }, [data]);
 
   const chartData = data.map(item => ({
     name: item.symbol,
